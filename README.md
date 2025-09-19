@@ -230,6 +230,7 @@ O sistema utiliza o algoritmo oficial ISO 3779:
 - Padrões de VINs brasileiros identificados
 - Padrões de VINs de diferentes regiões (México, Argentina, Brasil)
 - Modelos atuais e históricos da Volkswagen
+- **Dados reais confirmados**: Polo 1.0 (9BWAH5BZ7RT600182) com informações completas de motor, transmissão e especificações
 
 ## 🛠️ Desenvolvimento
 

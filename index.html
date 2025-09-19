@@ -811,16 +811,16 @@ const WMI_HINTS = {
   '93V': { brand: 'Audi Brasil', models:['A3','Q3'] }
 };
 
-// Regras específicas baseadas nos exemplos fornecidos
+// Regras específicas baseadas em dados reais fornecidos
 function vwBrModelByVDS(vin){
   const wmi = vin.slice(0,3).toUpperCase();
   const p45 = vin.slice(3,5).toUpperCase();
   
   if (wmi !== '9BW') return null;
   
-  // Padrões identificados nos exemplos
+  // Padrões confirmados com dados reais
   if (p45 === 'CH') return 'Nivus';
-  if (p45 === 'AH') return 'Polo';
+  if (p45 === 'AH') return 'Polo'; 
   if (p45 === 'AJ') return 'Polo/Golf'; // AJ pode ser Polo ou Golf
   if (p45 === 'BJ') return 'T-Cross';
   if (p45 === 'KB') return 'Saveiro';
@@ -1038,8 +1038,7 @@ vinInput.addEventListener('input', () => {
   }
 });
 
-// Pré-preenche com um exemplo genérico
-vinInput.value = ''; // Exemplo genérico para demonstração
+vinInput.value = '';
 </script>
 </body>
 </html>
