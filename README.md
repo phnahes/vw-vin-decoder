@@ -4,7 +4,7 @@ Um decodificador completo e responsivo para números de identificação de veíc
 
 ## 🚗 Sobre o Projeto
 
-Este projeto implementa um decodificador de VIN específico para veículos Volkswagen, capaz de identificar modelos, anos, plantas de fabricação e validar a integridade do código. O sistema é baseado na documentação oficial do ClubVeeDub e especificações internacionais.
+Este projeto implementa um decodificador de VIN específico para veículos Volkswagen, capaz de identificar modelos, anos, plantas de fabricação e validar a integridade do código.
 
 ### ✨ Funcionalidades Principais
 
@@ -171,14 +171,6 @@ O sistema utiliza o mapeamento oficial de anos:
 4. Clique em "Decodificar" para processar manualmente
 5. Use "Limpar" para resetar o campo
 
-### Exemplos de VINs para Teste
-O sistema vem pré-carregado com exemplos reais:
-
-- `9BWCH6CH9PP037646` - VW NIVUS 1.0 HIGH (Brasil)
-- `9BWAH5BZ7RT600182` - VW POLO G 1.0 (Brasil)
-- `9BWBJ6BF2S4005633` - VW T-Cross 1.4 HIGH (Brasil)
-- `8AWBJ6B24PA807173` - VW Taos 1.4l (Argentina)
-- `3VWAE11K9AM029083` - VW Jetta 2.5 (México)
 
 ### Interpretando os Resultados
 
@@ -218,11 +210,6 @@ O sistema utiliza o algoritmo oficial ISO 3779:
 4. Determina dígito verificador (resto da divisão por 11)
 5. Compara com dígito verificador do VIN
 
-## 📚 Fontes e Referências
-
-### Documentação Oficial
-- [ClubVeeDub VW VIN Codes](https://www.clubvw.org.au/vwreference/vwvin/) - Documentação oficial australiana
-- **ISO 3779**: Padrão internacional para números de identificação de veículos
 
 ### Especificações Técnicas
 - **Estrutura VIN**: Conforme ISO 3779
@@ -230,9 +217,9 @@ O sistema utiliza o algoritmo oficial ISO 3779:
 - **Mapeamento de anos**: Especificação oficial VW
 - **Códigos de plantas**: Documentação oficial das fábricas
 
-### Exemplos Reais
-- VINs brasileiros fornecidos pelo usuário
-- VINs de diferentes regiões (México, Argentina, Brasil)
+### Exemplos de Padrões
+- Padrões de VINs brasileiros identificados
+- Padrões de VINs de diferentes regiões (México, Argentina, Brasil)
 - Modelos atuais e históricos da Volkswagen
 
 ## 🛠️ Desenvolvimento
@@ -253,35 +240,9 @@ vw-vin-decoder/
 - ✅ Exemplos pré-carregados
 - ✅ Decodificação automática
 
-### Melhorias Futuras
-- 🔄 Integração com API vPIC (opcional)
-- 🔄 Suporte a mais fabricantes
-- 🔄 Histórico de VINs decodificados
-- 🔄 Exportação de resultados
-- 🔄 Modo offline completo
 
 ## 📄 Licença
 
 Este projeto é de código aberto e pode ser usado livremente para fins educacionais e comerciais.
 
-## 🤝 Contribuições
-
-Contribuições são bem-vindas! Se você encontrar:
-- Novos códigos WMI ou VDS
-- Plantas de fabricação não identificadas
-- Modelos não reconhecidos
-- Melhorias na interface
-
-Por favor, abra uma issue ou envie um pull request.
-
-## 📞 Suporte
-
-Para dúvidas ou problemas:
-1. Verifique se o VIN tem exatamente 17 caracteres
-2. Confirme que é um VIN Volkswagen válido
-3. Teste com os exemplos fornecidos
-4. Consulte a documentação oficial do ClubVeeDub
-
 ---
-
-**Desenvolvido com base na documentação oficial do ClubVeeDub e especificações ISO 3779**
