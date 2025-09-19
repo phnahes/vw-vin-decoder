@@ -2,6 +2,8 @@
 
 Um decodificador completo e responsivo para números de identificação de veículos (VIN) da Volkswagen, baseado na documentação oficial e especificações ISO 3779.
 
+🌐 **Demo Online**: [https://phnahes.github.io/vw-vin-decoder/](https://phnahes.github.io/vw-vin-decoder/)
+
 ## 🚗 Sobre o Projeto
 
 Este projeto implementa um decodificador de VIN específico para veículos Volkswagen, capaz de identificar modelos, anos, plantas de fabricação e validar a integridade do código.
@@ -165,11 +167,18 @@ O sistema utiliza o mapeamento oficial de anos:
 ## 🚀 Como Usar
 
 ### Uso Básico
-1. Abra o arquivo `index.html` em qualquer navegador moderno
+
+#### 🌐 Versão Online (Recomendado)
+1. Acesse: [https://phnahes.github.io/vw-vin-decoder/](https://phnahes.github.io/vw-vin-decoder/)
 2. Digite um VIN de 17 caracteres no campo de entrada
 3. O sistema decodificará automaticamente quando você digitar 17 caracteres
 4. Clique em "Decodificar" para processar manualmente
 5. Use "Limpar" para resetar o campo
+
+#### 💻 Versão Local
+1. Clone este repositório: `git clone https://github.com/phnahes/vw-vin-decoder.git`
+2. Abra o arquivo `index.html` em qualquer navegador moderno
+3. Siga os mesmos passos da versão online
 
 
 ### Interpretando os Resultados
