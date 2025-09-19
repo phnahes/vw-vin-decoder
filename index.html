@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Decodificador de VIN VW</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root { 
+      --bg: #f8fafc; 
+      --card: #ffffff; 
+      --muted: #64748b; 
+      --text: #1e293b; 
+      --border: #e2e8f0;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --error: #ef4444;
+    }
+    
+    * { box-sizing: border-box; }
+    
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+      margin: 0; 
+      background: var(--bg); 
+      color: var(--text);
+      line-height: 1.6;
+    }
+    
+    .container { 
+      max-width: 800px; 
+      margin: 0 auto; 
+      padding: 20px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    h1 { 
+      font-size: 2rem; 
+      margin: 0 0 8px; 
+      color: var(--text);
+      font-weight: 700;
+    }
+    
+    .subtitle { 
+      color: var(--muted); 
+      font-size: 1rem; 
+      margin-bottom: 0;
+    }
+
+    .card { 
+      background: var(--card); 
+      border: 1px solid var(--border); 
+      border-radius: 12px; 
+      padding: 24px; 
+      margin-bottom: 24px; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    label { 
+      font-weight: 600; 
+      font-size: 0.875rem; 
+      display: block; 
+      margin-bottom: 8px; 
+      color: var(--text);
+    }
+    
+    input[type=text] { 
+      width: 100%; 
+      background: var(--card); 
+      border: 2px solid var(--border); 
+      color: var(--text); 
+      padding: 12px 16px; 
+      border-radius: 8px; 
+      outline: none; 
+      font-size: 1rem;
+      transition: border-color 0.2s ease;
+    }
+    
+    input[type=text]:focus {
+      border-color: var(--primary);
+    }
+    
+    .input-group { 
+      display: flex; 
+      gap: 12px; 
+      flex-wrap: wrap; 
+      align-items: flex-end;
+    }
+    
+    button { 
+      background: var(--primary); 
+      border: none; 
+      color: white; 
+      padding: 12px 20px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-weight: 600; 
+      font-size: 0.875rem;
+      transition: background-color 0.2s ease;
+      white-space: nowrap;
+    }
+    
+    button:hover {
+      background: #2563eb;
+    }
+    
+    button.secondary { 
+      background: transparent; 
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    
+    button.secondary:hover {
+      background: var(--bg);
+    }
+    
+    .status { 
+      font-size: 0.875rem; 
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+    
+    .status.success { 
+      color: var(--success); 
+      background: #ecfdf5;
+      border: 1px solid #d1fae5;
+    }
+    
+    .status.error { 
+      color: var(--error); 
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+    
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    .result-item {
+      background: var(--bg);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    
+    .result-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    
+    .result-value {
+      font-size: 0.875rem;
+      color: var(--text);
+      font-weight: 500;
+    }
+    
+    .model-info {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      color: #0369a1;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      margin-top: 8px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 16px;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+      }
+      
+      .card {
+        padding: 20px;
+      }
+      
+      .input-group {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .input-group button {
+        width: 100%;
+      }
+      
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .container {
+        padding: 12px;
+      }
+      
+      .card {
+        padding: 16px;
+      }
+      
+      h1 {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Decodificador de VIN VW</h1>
+      <p class="subtitle">Valida e decodifica números de identificação de veículos Volkswagen baseado na documentação oficial</p>
+    </div>
+
+    <div class="card">
+      <label for="vin">VIN (17 caracteres)</label>
+      <div class="input-group">
+        <input id="vin" type="text" placeholder="Ex: 3VW2D6BU9RM018052" maxlength="17" />
+        <button id="btnDecode">Decodificar</button>
+        <button id="btnClear" class="secondary">Limpar</button>
+      </div>
+      <div id="out"></div>
+    </div>
+  </div>
+
+<script>
+/* ====== Tabelas e utilitários ====== */
+const translit = {
+  'A':1,'B':2,'C':3,'D':4,'E':5,'F':6,'G':7,'H':8,
+  'J':1,'K':2,'L':3,'M':4,'N':5,'P':7,'R':9,
+  'S':2,'T':3,'U':4,'V':5,'W':6,'X':7,'Y':8,'Z':9,
+  '0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9
+};
+const weights = [8,7,6,5,4,3,2,10,0,9,8,7,6,5,4,3,2];
+
+const yearMap = {
+  'V': 2027, 'T': 2026, 'S': 2025, 'R': 2024, 'P': 2023, 'N': 2022, 'M': 2021, 'L': 2020,
+  'K': 2019, 'J': 2018, 'H': 2017, 'G': 2016, 'F': 2015, 'E': 2014, 'D': 2013, 'C': 2012,
+  'B': 2011, 'A': 2010, '9': 2009, '8': 2008, '7': 2007, '6': 2006, '5': 2005, '4': 2004,
+  '3': 2003, '2': 2002, '1': 2001, 'Y': 2000
+};
+
+
+// Base de dados completa de modelos VW
+const VW_MODELS = {
+  '054': 'Jetta VA7',
+  '0A1': 'B SUV',
+  '0B2': 'Magotan',
+  '0B3': 'Magotan B8',
+  '0C1': 'Lavida',
+  '0C2': 'Lavida',
+  '0C3': 'Lavida',
+  '0D1': 'Tayron / Tyleon China',
+  '0D2': 'Silver Seraph',
+  '0D3': 'Tayron',
+  '0D4': 'Tayron',
+  '0D5': 'Tayron',
+  '0E1': 'Lavida BEV',
+  '0H7': 'Magotan CC',
+  '0H8': 'Magotan CC',
+  '0H9': 'Magotan CC',
+  '0J3': 'Sagitar',
+  '0J4': 'Sagitar',
+  '0K2': 'New Bora BEV',
+  '0L1': 'A-SUV Budget',
+  '0L2': 'A SUV Budget Low',
+  '0M2': 'Budged Car SH',
+  '0PC': 'B/SUV Coupe China',
+  '0R1': 'Touran',
+  '0S1': 'Golf Sportsvan China',
+  '0S2': 'Golf Sportsvan China',
+  '0T1': 'Tiguan China Sued',
+  '0T2': 'Tiguan China LWB',
+  '0T3': 'Tiguan China LWB',
+  '0T4': 'Tiguan China LWB',
+  '0V1': 'B SMV',
+  '0V2': 'Talagon',
+  '121': 'Up!',
+  '122': 'eco up!',
+  '123': 'up!',
+  '137': 'Scirocco',
+  '138': 'Scirocco',
+  '152': '1302/1303 Cabriolet R',
+  '153': 'New Bora',
+  '162': 'Jetta 2-tuerig Rl',
+  '163': 'Jetta 4-tuerig Ll',
+  '170': 'Caddy Base',
+  '174': 'Golf 4-tuerig Rl',
+  '181': 'Modell 181 Ll',
+  '182': 'Modell 181 Rl',
+  '183': 'Iltis',
+  '184': 'NEW LAVIDA FL',
+  '185': 'Gran Lavida FL',
+  '186': 'Lavida',
+  '1B1': 'Sedan',
+  '1C1': 'New Beetle (USA)',
+  '1E7': 'Golf Cabriolet',
+  '1F7': 'EOS',
+  '1F8': 'Eos',
+  '1G2': 'Jetta',
+  '1G3': 'Jetta',
+  '1J1': 'Golf',
+  '1J2': 'Bora',
+  '1J5': 'Golf Variant',
+  '1J6': 'Bora Variant',
+  '1K1': 'Golf',
+  '1K2': 'Jetta',
+  '1K5': 'Golf Variant',
+  '1T1': 'Touran',
+  '1T2': 'Touran',
+  '1T3': 'Touran',
+  '1V7': 'Golf Cabrio',
+  '1Y7': 'New Beetle Cabrio',
+  '226': 'Microbus',
+  '2CA': 'Caddy',
+  '2CB': 'Caddy',
+  '2CH': 'Caddy',
+  '2CJ': 'Caddy',
+  '2DA': 'LT 28-35 Kasten 2500',
+  '2DB': 'LT 28-35 Kombi 3000',
+  '2DC': 'LT 28-35 Fahrgest 300',
+  '2DD': 'LT 28-46 Kasten 3550',
+  '2DE': 'LT 28-35 Kombi 3550',
+  '2DF': 'LT 28-46 Fahrgest 355',
+  '2DG': 'LT 28-46 Doppelkab 35',
+  '2DH': 'LT 35-46 Kasten 4025',
+  '2DK': 'LT 35 Kombi 4025',
+  '2DL': 'LT 35-46 Fahrgest 402',
+  '2DM': 'LT 35-46 Doppelkab 40',
+  '2EA': 'LT 2006>',
+  '2EB': 'LT 2006>',
+  '2ED': 'LT 2006>',
+  '2EE': 'LT 2006>',
+  '2EH': 'LT 2006>',
+  '2EK': 'LT 2006>',
+  '2EX': 'LT 2006>',
+  '2FC': 'CRAFTER',
+  '2FF': 'CRAFTER',
+  '2FG': 'CRAFTER',
+  '2FL': 'CRAFTER',
+  '2FM': 'CRAFTER',
+  '2FZ': 'CRAFTER',
+  '2HA': 'Amarok',
+  '2HB': 'Amarok',
+  '2KA': 'Caddy',
+  '2KB': 'Caddy',
+  '2KH': 'Caddy',
+  '2KJ': 'Caddy',
+  '2RB': 'LT (Brasil.)',
+  '2RC': 'LT (Brasil.)',
+  '2RE': 'LT (Brasil.)',
+  '2RF': 'LT (Brasil.)',
+  '2RG': 'LT (Brasil.)',
+  '2RJ': 'LT (Brasil.)',
+  '2RK': 'LT (Brasil.)',
+  '2RL': 'LT (Brasil.)',
+  '2RN': 'LT (Brasil.)',
+  '2RP': 'LT (Brasil.)',
+  '2RR': '81500D-MWM',
+  '2SE': 'Caminh.',
+  '2SH': 'Caminh.',
+  '2SK': 'Caminh.',
+  '2SL': 'Caminh.',
+  '2TB': 'Caminh.',
+  '2TC': 'Caminh.',
+  '2TD': 'Caminh.',
+  '2TT': 'Caminh.',
+  '2UF': 'Caminh.',
+  '2UM': 'Caminh.',
+  '2VC': 'L 80 Radstand 3300 mm',
+  '2VF': 'L 80 Radstand 3900 mm',
+  '2VH': 'L 80 Radstand lang',
+  '2WX': 'Onibus',
+  '2WY': 'Onibus',
+  '2ZY': 'Onibus',
+  '2ZZ': 'Onibus',
+  '333': 'Santana',
+  '334': 'Santana',
+  '345': 'Karmann Ghia Typ 3 Ll',
+  '357': 'Passat CC',
+  '358': 'Passat CC',
+  '362': 'Typ 3 Variant Rl',
+  '365': 'Typ 3 Variant Ll',
+  '3B2': 'Passat',
+  '3B3': 'Passat',
+  '3B5': 'Passat Variant',
+  '3B6': 'Passat Variant',
+  '3C2': 'Passat',
+  '3C5': 'Passat Variant',
+  '3D1': 'Phaeton',
+  '3D2': 'Phaeton',
+  '3D3': 'Phaeton',
+  '3D4': 'Phaeton',
+  '3D6': 'Phaeton',
+  '3D7': 'Phaeton',
+  '3D8': 'Phaeton',
+  '3D9': 'Phaeton',
+  '3E8': 'Phideon',
+  '3E9': 'Phideon',
+  '3G2': 'Passat B8 Lim.',
+  '3G5': 'Passat',
+  '3H7': 'Arteon',
+  '3H8': 'Arteon',
+  '3H9': 'Arteon Shooting Brake',
+  '3X2': 'Santana',
+  '3X5': 'Santana Quantum',
+  '517': 'Golf Cabrio',
+  '521': 'Golf Plus',
+  '591': 'Tiguan',
+  '592': 'Tiguan',
+  '5C1': 'Beetle',
+  '5C2': 'Beetle',
+  '5C7': 'Beetle Cabrio',
+  '5C8': 'Beetle Coupé',
+  '5G1': 'Golf',
+  '5K1': 'Golf',
+  '5M1': 'Golf Plus',
+  '5N1': 'Tiguan',
+  '5N2': 'Tiguan',
+  '5T1': 'Touran',
+  '5U1': 'Gol',
+  '5U2': 'Voyage',
+  '5U3': 'Gol',
+  '5U4': 'Voyage',
+  '5U5': 'Gol 6',
+  '5U6': 'Voyage 6',
+  '5U7': 'GOL / VOYAGE 6 / Saveiro',
+  '5U8': 'Saveiro Cab. Estend.',
+  '5U9': 'Saveiro Cab. Simples',
+  '5UA': 'Saveiro',
+  '5UB': 'Gol NF',
+  '5UC': 'Saveiro',
+  '5UD': 'New Saveiro',
+  '5UE': 'New Saveiro',
+  '5UF': 'New Saveiro',
+  '5UG': 'GOL / VOYAGE 6 / Saveiro',
+  '5UK': 'GOL / VOYAGE 6 / Saveiro',
+  '5UR': 'GOL / VOYAGE 6 / Saveiro',
+  '5W1': 'Gol',
+  '5W5': 'Parati',
+  '5W9': 'Saveiro',
+  '5X1': 'Gol',
+  '5X5': 'Parati',
+  '5X9': 'Saveiro',
+  '5Y1': 'Gol Special',
+  '5Z1': 'Fox',
+  '5Z3': 'Fox',
+  '5Z4': 'Fox',
+  '5Z5': 'N.Fox',
+  '5Z6': 'Suran/Spacefox/SportV',
+  '5Z7': 'Spacefox/Suran',
+  '5Z9': 'NewSpacefox/NewSuran',
+  '601': 'Polo',
+  '602': 'Polo',
+  '603': 'Polo Kurzheck Ind. GP',
+  '604': 'Polo Indien',
+  '612': 'Polo',
+  '614': 'Polo SH Russl',
+  '621': 'Polo',
+  '631': 'Indian Compact Sedan',
+  '641': 'Polo',
+  '642': 'Polo',
+  '643': 'Polo A05 Highl.',
+  '644': 'Polo Lim',
+  '6A1': 'up!',
+  '6A5': 'up!',
+  '6A6': 'up!',
+  '6C1': 'Polo',
+  '6E1': 'Lupo 3L',
+  '6N1': 'Polo',
+  '6N2': 'Polo',
+  '6R1': 'Polo',
+  '6RS': 'Polo',
+  '6RT': 'Vivo',
+  '6S1': 'Vivo',
+  '6S2': 'Vivo',
+  '6S3': 'Polo Vivo',
+  '6S4': 'Polo Vivo NB',
+  '6V2': 'Polo Classic',
+  '6V5': 'Polo Variant',
+  '6X1': 'Lupo',
+  '6Z1': 'XL1',
+  '7B1': 'Routan',
+  '7DA': 'Transporter Kasten',
+  '7DB': 'Transporter Kombi',
+  '7DC': 'Transporter Kombi/Cam',
+  '7DE': 'Transporter Pritsche',
+  '7DH': 'Transporter Kasten',
+  '7DJ': 'Transporter Kombi',
+  '7DK': 'Transporter Bus/Campe',
+  '7DL': 'Transporter Pritsche',
+  '7DM': 'Transporter Doppelkab',
+  '7EA': 'Transporter',
+  '7EB': 'Caravelle',
+  '7EC': 'California',
+  '7EF': 'California',
+  '7EG': 'California Beach',
+  '7EH': 'Transporter',
+  '7EJ': 'Caravelle',
+  '7EM': 'Multivan',
+  '7EN': 'Multivan',
+  '7FD': 'Transporter',
+  '7FE': 'Transporter',
+  '7FL': 'Transporter',
+  '7FZ': 'Zugkopf?',
+  '7HA': 'Transporter',
+  '7HB': 'Transporter',
+  '7HC': 'California',
+  '7HF': 'Multivan',
+  '7HH': 'Transporter',
+  '7HJ': 'Transporter/Kombi LR',
+  '7HM': 'Multivan',
+  '7HN': 'MULTIVAN',
+  '7JD': 'Transporter',
+  '7JE': 'Transporter',
+  '7JL': 'Transporter',
+  '7JZ': 'Transporter',
+  '7L6': 'Touareg',
+  '7LA': 'Touareg',
+  '7M6': 'Sharan',
+  '7M8': 'Sharan',
+  '7M9': 'Sharan',
+  '7N1': 'Sharan',
+  '7N2': 'Sharan GP',
+  '7P5': 'Touareg',
+  '7P6': 'Touareg',
+  '7X1': 'Kombi',
+  '7X2': 'Kombi',
+  '7Y3': 'nicht ermittelbar',
+  '942': 'B7L 1.4T Trend 96 D7F',
+  '981': 'Golf',
+  '990': 'CC',
+  '991': 'CC',
+  '9A1': 'Polo',
+  '9A2': 'Polo Sedan',
+  '9A3': 'Polo',
+  '9A4': 'Polo Sedan',
+  '9A5': 'Polo',
+  '9A6': 'Polo',
+  '9B1': 'Golf',
+  '9B3': 'Golf',
+  '9C1': 'New Beetle (Europe)',
+  '9D1': 'Golf (China)',
+  '9D2': 'Golf (China)',
+  '9E2': 'Polo Classic',
+  '9E7': 'Caddy',
+  '9F0': 'Passat (China)',
+  '9F8': 'Passat (China)',
+  '9F9': 'Passat (China)',
+  '9G1': 'New Beetle RSI',
+  '9HB': 'Caddy-Kombi',
+  '9J1': 'Polo A04 (China)',
+  '9J2': 'Polo A04 (China)',
+  '9J3': 'Polo A04 (China)',
+  '9J4': 'Polo A04 (China)',
+  '9J6': 'Polo',
+  '9K9': 'Caddy Kasten/Kombi',
+  '9L2': 'Sagitar',
+  '9M2': 'Jetta (Mexiko)',
+  '9N1': 'Polo',
+  '9N2': 'Polo Sedan',
+  '9N3': 'Polo',
+  '9N4': 'Polo',
+  '9R1': 'Touran (China)',
+  '9R3': 'Touran',
+  '9U7': 'Caddy Pickup',
+  '9V4': 'Polo Playa',
+  '9V8': 'Polo Classic',
+  '9X1': 'Pointer',
+  '9X2': 'Magotan',
+  '9X5': 'Pointer SW',
+  '9X6': 'Pickup',
+  'A11': 'T-Roc',
+  'A21': 'T-Roc LWB CN',
+  'A22': 'T-Roc LWB CN',
+  'A32': 'Passat NMS',
+  'A33': 'Passat NMS',
+  'A34': 'Passat US',
+  'A42': 'NMS TREND 96 M5F',
+  'A43': 'New Passat NMS',
+  'AC7': 'T-Roc Cabrio',
+  'AC8': 'T-Roc Cabrio',
+  'AD1': 'Tiguan',
+  'AE1': 'Polo',
+  'AGD': 'AMAROK PACHECO PA2',
+  'AJ5': 'Golf Variant',
+  'AM1': 'Sportsvan',
+  'AN1': 'Golf Sportsvan',
+  'AU1': 'Golf',
+  'AU2': 'Golf',
+  'AV2': 'Jetta',
+  'AV3': 'Jetta Russland',
+  'AW1': 'Polo',
+  'AX1': 'Tiguan',
+  'AY2': 'Jetta',
+  'AY3': 'Jetta 1,4 Malaysia',
+  'B21': 'Tharu CS',
+  'B22': 'Tharu CS',
+  'B31': 'THARU',
+  'BA5': 'Golf Variant',
+  'BC1': 'Golf A7 Brasilien',
+  'BC2': 'Golf',
+  'BD1': 'Tiguan CS',
+  'BE1': 'E-Golf',
+  'BE2': 'e-Golf',
+  'BF1': 'T-Cross',
+  'BF3': 'T-Cross',
+  'BJ2': 'Tiguan',
+  'BK2': 'Sagitar',
+  'BL1': 'e-up!',
+  'BL2': 'e-up!',
+  'BL3': 'e-up!',
+  'BM1': 'Lamando',
+  'BM2': 'Lamando',
+  'BN1': 'Golf',
+  'BN2': 'Golf',
+  'BQ1': 'Golf',
+  'BR1': 'Santana',
+  'BR2': 'Santana',
+  'BR4': 'Gran Santana',
+  'BS2': 'Jetta',
+  'BS4': 'Jetta (A-Entry)',
+  'BT1': 'Tiguan',
+  'BT2': 'TIGUAN',
+  'BU3': 'Jetta',
+  'BU4': 'Jetta',
+  'BU5': 'Jetta',
+  'BV5': 'Golf',
+  'BW2': 'Tiguan LWB',
+  'BX5': 'Golf Variant Mexico',
+  'BX6': 'Golf',
+  'BZ1': 'Polo G',
+  'BZ2': 'Polo G',
+  'BZ3': 'Polo / Virtus',
+  'BZ4': 'Polo / Virtus',
+  'C11': 'T-Cross',
+  'C31': 'Polo China CS',
+  'C42': 'New Passat',
+  'C43': 'New Passat',
+  'C52': 'New Bora',
+  'C53': 'New Bora',
+  'C61': 'B-MPV China CS',
+  'C71': 'T-CROSS',
+  'C81': 'T- Cross China CS',
+  'C82': 'T- Cross China CS',
+  'C91': 'e-Golf China',
+  'CA1': 'B SUV',
+  'CA2': 'Atlas',
+  'CA3': 'Atlas',
+  'CB2': 'Passat B8 PA',
+  'CB5': 'Passat B8',
+  'CD1': 'Golf A8',
+  'CF1': 'B - MPV',
+  'CG5': 'Golf Variant',
+  'CH1': 'NIVUS',
+  'CH2': 'NIVUS',
+  'CJ5': 'Passat B9',
+  'CK4': 'Polo Russland',
+  'CL1': 'Taos',
+  'CL2': 'Taos',
+  'CMC': 'B SUV 5-Seater',
+  'CMD': 'B-SUV 5-Seater',
+  'CN1': 'Golf A8/ China',
+  'CN2': 'Golf A8/ China',
+  'CP1': 'Taos',
+  'CQ1': 'Taos',
+  'CR7': 'Touareg',
+  'CS1': 'Taigo',
+  'CT1': 'TIGUAN',
+  'CU1': 'Teramont',
+  'CVC': 'B/SUV Coupe China',
+  'CW1': 'Taigun',
+  'CX2': 'B Main SUV',
+  'D11': 'T-Roc',
+  'D22': 'Virtus India',
+  'D31': 'T-Cross',
+  'DA1': 'Golf A8',
+  'DB5': 'Golf 8 Variant',
+  'DC1': 'Entry Notchback',
+  'DG1': 'Teramont',
+  'DM1': 'Lamando',
+  'DN1': 'Tayron CN',
+  'E02': 'Aero CS',
+  'E11': 'ID.3',
+  'E12': 'ID.3',
+  'E21': 'ID.4',
+  'E39': 'ID.5',
+  'E41': 'A SUVe (CS)',
+  'E51': 'ID.6',
+  'E61': 'A SUVe (CS)',
+  'E71': 'Lounge SUVe',
+  'E81': 'A SUVe - ID.4',
+  'E91': 'Neo / ID.3',
+  'EA2': 'ID.7 China',
+  'EBA': 'ID-Buzz',
+  'EBB': 'ID-Buzz',
+  'EBJ': 'ID-Buzz',
+  'ED2': 'ID.7',
+  'ED5': 'ID.7 Variant',
+  'ER1': 'ID. UNYX',
+  'NG2': 'Rapid China',
+  'R11': 'Polo Track',
+  'R22': 'Magotan B9',
+  'R31': 'Passat (NMS CS)',
+  'R41': 'Tayron',
+  'RC8': 'Touareg',
+  'RM1': 'Tayron',
+  'S1B': 'Amarok DC',
+  'S6B': 'Amarok',
+  'S7A': 'Amarok',
+  'S7B': 'Amarok',
+  'S8A': 'Pluto',
+  'SAA': 'Caddy KA',
+  'SAB': 'Caddy KO',
+  'SAH': 'Caddy Maxi KA',
+  'SAJ': 'Caddy Maxi KO',
+  'SBA': 'Caddy',
+  'SBB': 'Caddy',
+  'SBH': 'Caddy',
+  'SBJ': 'Caddy',
+  'SCB': 'Grand California',
+  'SCC': 'Grand California',
+  'SFD': 'T6 offen Doka lang',
+  'SFE': 'T6 offen kurz',
+  'SFL': 'T6 offen lang',
+  'SFZ': 'T6 offen Zugkopf',
+  'SGA': 'T6 Kasten kurz',
+  'SGB': 'Transporter',
+  'SGC': 'Camper',
+  'SGF': 'T6 Kombi Plus',
+  'SGG': 'Kombi Plus California',
+  'SGH': 'T6 Kasten lang',
+  'SGJ': 'T6 geschlossen lang',
+  'SGM': 'Multivan',
+  'SGN': 'Multivan LR',
+  'SHA': 'T6 GP geschlossener Aufbau',
+  'SHB': 'T6 GP geschlossener Aufbau',
+  'SHC': 'T6 GP geschlossener Aufbau',
+  'SHH': 'T6 GP geschlossener Aufbau',
+  'SHJ': 'T6 GP geschlossener Aufbau',
+  'SHM': 'T6 GP geschlossener Aufbau',
+  'SHN': 'T6 GP geschlossener Aufbau',
+  'SJD': 'T6 GP offener Aufbau',
+  'SJE': 'T6 GP offener Aufbau',
+  'SJL': 'T6 GP offener Aufbau',
+  'STC': 'Multivan',
+  'STM': 'Multivan',
+  'STN': 'Multivan',
+  'SXB': 'Crafter (geschlossen) BEV',
+  'SYB': 'Crafter',
+  'SYC': 'Crafter',
+  'SYD': 'Crafter',
+  'SYI': 'Crafter',
+  'SYJ': 'Crafter',
+  'SYM': 'Crafter (geschlossen)',
+  'SZB': 'Crafter',
+  'SZC': 'Crafter',
+  'SZD': 'Crafter',
+  'SZH': 'Crafter',
+  'SZI': 'Crafter',
+  'SZJ': 'Crafter (offen)',
+  'SZK': 'Crafter (offen)',
+  'SZO': 'Crafter (offen)',
+  'SZP': 'Crafter (offen)',
+  'SZU': 'Crafter (offen)',
+  'SZZ': 'Crafter',
+  'T1A': 'Amarok',
+  'T1B': 'Amarok',
+  'TVB': 'Cargo (Koop)',
+  'TVC': 'Cargo (Koop)',
+  'TVK': 'Cargo (Koop)',
+  'TVM': 'Cargo (Koop)',
+  'TVV': 'Cargo (Koop)',
+  'TVW': 'Cargo (Koop)',
+  'TWB': 'Cargo LWB (Koop)',
+  'TWC': 'Cargo LWB (Koop)',
+  'TWE': 'Cargo LWB (Koop)',
+  'TWL': 'Cargo LWB (Koop)',
+  'TWV': 'Cargo LWB (Koop)',
+  'TWW': 'Cargo LWB (Koop)'
+};
+
+// Mapeamentos de WMI baseados na documentação oficial do ClubVeeDub
+const WMI_HINTS = {
+  'WVW': { brand: 'Volkswagen Cars (Europa)', models:['Golf','Jetta','Passat','Polo','Tiguan'] },
+  'WVG': { brand: 'Volkswagen SUVs (Europa)', models:['Tiguan','Touareg','T-Roc'] },
+  'WV1': { brand: 'Volkswagen Commercials (Europa)', models:['Caddy','Transporter','Crafter'] },
+  'WV2': { brand: 'Volkswagen Bus/Van (Europa)', models:['Transporter','Caravelle','Multivan'] },
+  'WV3': { brand: 'Volkswagen Trucks (Europa)', models:['LT','Crafter'] },
+  '9BW': { brand: 'Volkswagen do Brasil', models:['Polo','Virtus','Nivus','T-Cross','Saveiro','Golf'] },
+  '3VW': { brand: 'Volkswagen México', models:['Jetta','GLI','Tiguan'] },
+  '8AW': { brand: 'Volkswagen Argentina', models:['Taos'] },
+  '1VW': { brand: 'Volkswagen USA', models:['Jetta','Passat','Golf','Tiguan'] },
+  'WAU': { brand: 'Audi (Alemanha)', models:['A3','A4','A6','Q5','Q7'] },
+  'TRU': { brand: 'Audi Hungria', models:['TT','A3'] },
+  '93V': { brand: 'Audi Brasil', models:['A3','Q3'] }
+};
+
+// Regras específicas baseadas nos exemplos fornecidos
+function vwBrModelByVDS(vin){
+  const wmi = vin.slice(0,3).toUpperCase();
+  const p45 = vin.slice(3,5).toUpperCase();
+  
+  if (wmi !== '9BW') return null;
+  
+  // Padrões identificados nos exemplos
+  if (p45 === 'CH') return 'Nivus';
+  if (p45 === 'AH') return 'Polo';
+  if (p45 === 'AJ') return 'Polo/Golf'; // AJ pode ser Polo ou Golf
+  if (p45 === 'BJ') return 'T-Cross';
+  if (p45 === 'KB') return 'Saveiro';
+  if (p45 === 'DH' || p45 === 'DJ') return 'Virtus';
+  
+  return null;
+}
+
+function inferModel(vin){
+  const wmi = vin.slice(0,3).toUpperCase();
+  const vds = vin.slice(3,9).toUpperCase();
+  
+  // Identifica por WMI baseado na documentação oficial
+  if (wmi === 'WVW') return 'Volkswagen Cars (Europa)';
+  if (wmi === 'WVG') return 'Volkswagen SUVs (Europa)';
+  if (wmi === 'WV1') return 'Volkswagen Commercials (Europa)';
+  if (wmi === 'WV2') return 'Volkswagen Bus/Van (Europa)';
+  if (wmi === 'WV3') return 'Volkswagen Trucks (Europa)';
+  if (wmi === '1VW') return 'Volkswagen USA';
+  if (wmi === 'WAU') return 'Audi (Alemanha)';
+  if (wmi === 'TRU') return 'Audi Hungria';
+  if (wmi === '93V') return 'Audi Brasil';
+  
+  // Códigos específicos baseados nos exemplos
+  if (wmi === '3VW') {
+    const p45 = vds.slice(0,2);
+    if (p45 === 'AE') return 'Jetta';
+    return 'Jetta / GLI';
+  }
+  if (wmi === '8AW') {
+    const p45 = vds.slice(0,2);
+    if (p45 === 'BJ') return 'Taos';
+    return 'Taos';
+  }
+  if (wmi === '9BW') return vwBrModelByVDS(vin) || 'VW Brasil (modelo a confirmar)';
+  
+  // Tenta identificar por código de modelo no VDS (posições 4-6)
+  const modelCode = vds.slice(0,3);
+  if (VW_MODELS[modelCode]) {
+    return `${VW_MODELS[modelCode]} (código: ${modelCode})`;
+  }
+  
+  // Tenta identificar por código de modelo no VDS (posições 4-5)
+  const modelCode2 = vds.slice(0,2);
+  for (const [code, name] of Object.entries(VW_MODELS)) {
+    if (code.startsWith(modelCode2)) {
+      return `${name} (código: ${code})`;
+    }
+  }
+  
+  return null;
+}
+
+function decodeYear(ch){ return yearMap[ch] || null; }
+
+// Códigos de plantas baseados na documentação oficial do ClubVeeDub
+const plantCodes = {
+  'A': 'Ingolstadt, Alemanha',
+  'B': 'Bruxelas, Bélgica', 
+  'C': 'Chattanooga, EUA',
+  'D': 'Bratislava, Eslováquia',
+  'E': 'Emden, Alemanha',
+  'F': 'Ipiranga/Resende, Brasil',
+  'G': 'Graz, Áustria',
+  'H': 'Hanover, Alemanha',
+  'K': 'Osnabrück, Alemanha',
+  'L': 'Lagos, Nigéria',
+  'M': 'Puebla, México',
+  'N': 'Neckarsulm, Alemanha',
+  'P': 'Mosel, Alemanha / Anchieta, Brasil',
+  'R': 'Martorell, Espanha',
+  'S': 'Salzgitter, Alemanha',
+  'T': 'Taubaté, Brasil',
+  'U': 'Uitenhage, África do Sul',
+  'V': 'Palmela, Portugal',
+  'W': 'Wolfsburg, Alemanha',
+  'X': 'Poznan, Polônia',
+  'Y': 'Pamplona, Espanha',
+  '1': 'Győr, Hungria',
+  '2': 'Anting, China',
+  '3': 'Changchun, China',
+  '4': 'Curitiba, Brasil',
+  '6': 'Düsseldorf, Alemanha (Mercedes-Benz)',
+  '7': 'Ludwigsfelde, Alemanha (Mercedes-Benz)',
+  '8': 'Dresden, Alemanha / General Pacheco, Argentina',
+  '9': 'Wrzesnia, Polônia'
+};
+
+function decodePlant(ch){ return plantCodes[ch] || null; }
+
+function calcCheckDigit(vin){
+  vin = vin.toUpperCase();
+  if (vin.length!==17) return {error:'VIN precisa ter 17 caracteres'};
+  let sum=0; for(let i=0;i<17;i++){ const v=translit[vin[i]]; if(v===undefined) return {error:`Caractere inválido na posição ${i+1}: '${vin[i]}'`}; sum += v*weights[i]; }
+  const rem = sum % 11; return {sum, rem, check: (rem===10?'X':String(rem))};
+}
+
+function decodeLocal(vin){
+  vin = vin.toUpperCase();
+  const out = { vin };
+  if (vin.length!==17){ out.error='VIN precisa ter 17 caracteres'; return out; }
+  out.wmi = vin.slice(0,3);
+  out.vds = vin.slice(3,9);
+  out.vis = vin.slice(9);
+  out.checkDigit = vin[8];
+  out.yearCode = vin[9];
+  out.year = decodeYear(out.yearCode);
+  out.plantCode = vin[10];
+  out.plant = decodePlant(out.plantCode);
+  out.serial = vin.slice(11);
+  const chk = calcCheckDigit(vin);
+  out.checkCalc = chk.check; out.checkOk = !chk.error && (String(out.checkDigit).toUpperCase()===String(chk.check).toUpperCase());
+  // Marca/modelo
+  const wh = WMI_HINTS[out.wmi] || null; out.wmiHint = wh;
+  out.model = inferModel(vin);
+  return out;
+}
+
+function rowKV(k,v){ return `<div><strong>${k}:</strong> ${v??'—'}</div>`; }
+
+function renderSingle(res){
+  const out = document.getElementById('out');
+  if (res.error){ 
+    out.innerHTML = `<div class="status error">${res.error}</div>`; 
+    return; 
+  }
+  
+  const brand = res.wmiHint? res.wmiHint.brand : '—';
+  const models = res.wmiHint? (res.wmiHint.models||[]).join(', ') : '—';
+  
+  // Busca informações adicionais sobre o modelo no VDS
+  const vds = res.vds;
+  const modelCode = vds.slice(0,3);
+  const modelInfo = VW_MODELS[modelCode] ? VW_MODELS[modelCode] : '';
+  
+  out.innerHTML = `
+    <div class="status ${res.checkOk ? 'success' : 'error'}">
+      ${res.checkOk ? '✓ VIN Válido' : '✗ VIN Inválido'}
+    </div>
+    
+    <div class="result-grid">
+      <div class="result-item">
+        <div class="result-label">VIN</div>
+        <div class="result-value">${res.vin}</div>
+      </div>
+      
+      <div class="result-item">
+        <div class="result-label">WMI</div>
+        <div class="result-value">${res.wmi} ${brand !== '—' ? '— ' + brand : ''}</div>
+      </div>
+      
+      <div class="result-item">
+        <div class="result-label">Modelo</div>
+        <div class="result-value">${res.model || '—'}</div>
+        ${modelInfo ? `<div class="model-info">Código ${modelCode}: ${modelInfo}</div>` : ''}
+        ${res.vds ? `<div class="model-info">VDS: ${res.vds}</div>` : ''}
+      </div>
+      
+      <div class="result-item">
+        <div class="result-label">Ano (posição 10)</div>
+        <div class="result-value">${res.yearCode}${res.year ? ' → ' + res.year : ''}</div>
+      </div>
+      
+      <div class="result-item">
+        <div class="result-label">Planta (posição 11)</div>
+        <div class="result-value">${res.plantCode}${res.plant ? ' — ' + res.plant : ''}</div>
+      </div>
+      
+      <div class="result-item">
+        <div class="result-label">Serial</div>
+        <div class="result-value">${res.serial}</div>
+      </div>
+      
+      <div class="result-item">
+        <div class="result-label">VDS (4-9)</div>
+        <div class="result-value">${res.vds}</div>
+      </div>
+      
+      <div class="result-item">
+        <div class="result-label">VIS (10-17)</div>
+        <div class="result-value">${res.vis}</div>
+      </div>
+      
+      <div class="result-item">
+        <div class="result-label">Dígito Verificador</div>
+        <div class="result-value">${res.checkDigit} (calc: ${res.checkCalc})</div>
+      </div>
+    </div>
+  `;
+}
+
+
+/* ====== UI ====== */
+const vinInput = document.getElementById('vin');
+const btnDecode = document.getElementById('btnDecode');
+const btnClear = document.getElementById('btnClear');
+
+btnDecode.addEventListener('click', () => {
+  const v = vinInput.value.trim().toUpperCase();
+  renderSingle(decodeLocal(v));
+});
+
+btnClear.addEventListener('click', () => {
+  vinInput.value = '';
+  document.getElementById('out').innerHTML = '';
+});
+
+// Decodifica automaticamente quando o VIN tem 17 caracteres
+vinInput.addEventListener('input', () => {
+  const v = vinInput.value.trim().toUpperCase();
+  if (v.length === 17) {
+    renderSingle(decodeLocal(v));
+  } else if (v.length === 0) {
+    document.getElementById('out').innerHTML = '';
+  }
+});
+
+// Pré-preenche com um exemplo dos fornecidos
+const exampleVins = [
+  '9BWCH6CH9PP037646', // VW NIVUS 1.0 HIGH
+  '9BWAH5BZ7RT600182', // VW POLO G 1.0
+  '9BWBJ6BF2S4005633', // VW T-Cross 1.4 HIGH
+  '8AWBJ6B24PA807173', // VW Taos 1.4l
+  '3VWAE11K9AM029083'  // VW Jetta 2.5
+];
+
+vinInput.value = exampleVins[0]; // Carrega o primeiro exemplo
+</script>
+</body>
+</html>
