@@ -230,6 +230,7 @@ O sistema utiliza o algoritmo oficial ISO 3779:
 - Padrões de VINs brasileiros identificados
 - Padrões de VINs de diferentes regiões (México, Argentina, Brasil)
 - Modelos atuais e históricos da Volkswagen
+- **Padrões confirmados**: AH = Polo, AJ = Polo GTS, CH = Nivus, BJ = T-Cross
 
 
 ## 🛠️ Desenvolvimento
